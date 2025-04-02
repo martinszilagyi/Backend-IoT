@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
 
@@ -45,5 +46,8 @@ def ttn_data():
         return jsonify({"error": f"Failed to process data: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    # Start the server and use Socket.IO to handle real-time connections
-    socketio.run(app, host="0.0.0.0", port=5000, debug=False)
+    # Get the port from environment variables (Railway will provide this dynamically)
+    port = int(os.environ.get('PORT', 5000))
+
+    # Ensure that debug is set to False in production environment
+    socketio.run(app, host='0.0.0.0', port=port, debug=False)  # Ensure debug=False in production
