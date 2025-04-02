@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTN Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .data {
+            margin-top: 20px;
+        }
+        .data pre {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+        .data .title {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>TTN Data</h1>
+        <p>This page displays the data received from TTN via webhook.</p>
+
+        <div class="data">
+            <h3 class="title">Latest Data:</h3>
+            <pre id="data-display">Waiting for data...</pre>
+        </div>
+    </div>
+
+    <!-- Include Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        // Connect to the Flask-SocketIO server
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // Listen for the 'new_data' event and update the display
+        socket.on('new_data', function(data) {
+            console.log('Received data:', data);
+            
+            // Display the data in the <pre> element
+            document.getElementById('data-display').textContent = JSON.stringify(data, null, 2);
+        });
+    </script>
+</body>
+</html>
