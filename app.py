@@ -46,4 +46,4 @@ def ttn_data():
 
 if __name__ == '__main__':
     # Start the server and use Socket.IO to handle real-time connections
-    socketio.run(app, host="0.0.0.0", port=5000)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=False)
