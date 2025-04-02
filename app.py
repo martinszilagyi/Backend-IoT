@@ -46,8 +46,5 @@ def ttn_data():
         return jsonify({"error": f"Failed to process data: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    # Get the port from environment variables (Railway will provide this dynamically)
     port = int(os.environ.get('PORT', 5000))
-
-    # Ensure that debug is set to False in production environment
-    socketio.run(app, host='0.0.0.0', port=port, debug=False)  # Ensure debug=False in production
+    socketio.run(app, host='0.0.0.0', port=port, debug=True)
