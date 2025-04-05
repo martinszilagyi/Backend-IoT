@@ -37,8 +37,6 @@ def json_for_Google_API(wifi_str):
 
     return google_payload
 
-
-
 @app.route('/')
 def index():
     # Serve the HTML page directly from the backend
@@ -96,6 +94,5 @@ def ttn_data():
         return jsonify({"error": f"Failed to process data: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    #port = int(os.environ.get('PORT', 5000))
-    #app.run(host='0.0.0.0', port=port, debug=False)
-    socketio.run(app, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
