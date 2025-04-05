@@ -7,6 +7,7 @@ from flask_socketio import SocketIO, emit
 app = Flask(__name__)
 socketio = SocketIO(app)
 google_api_key = os.getenv('GOOGLE_API_KEY')
+print(google_api_key)
 
 access_points = []
 
