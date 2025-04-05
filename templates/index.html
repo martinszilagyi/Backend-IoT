@@ -57,7 +57,7 @@
     </div>
 
     <!-- Include Socket.IO -->
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -65,7 +65,7 @@
 
         // Connect to the Flask-SocketIO server
         var socket = io.connect('https://' + document.domain + ':' + location.port);
-        console.log('Socket connected to:', 'http://' + document.domain + ':' + location.port);
+        console.log('Socket connected to:', 'https://' + document.domain + ':' + location.port);
 
         // Initialize the map but keep it empty for now
         var map = L.map('map').setView([55.676098, 12.568337], 11); // Copenhagen
@@ -73,7 +73,7 @@
         // Add OpenStreetMap tile layer to the map
         var tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
 
         // Listen for the 'new_data' event and update the display
