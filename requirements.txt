@@ -3,4 +3,3 @@ flask-socketio==5.5.1
 werkzeug<3
 gunicorn==23.0.0
 requests==2.32.3
-railway==0.0.4
