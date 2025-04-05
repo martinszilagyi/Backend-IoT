@@ -76,6 +76,24 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
 
+        // Function to load data from localStorage if available
+        function loadDataFromStorage() {
+            var storedData = localStorage.getItem("ttnData");
+            if (storedData) {
+                var data = JSON.parse(storedData);
+                // Display stored data in the <pre> element
+                document.getElementById('data-display').textContent = JSON.stringify(data, null, 2);
+                // Set map view based on stored location data
+                if (data.location && data.location.lat && data.location.lng) {
+                    map.setView([data.location.lat, data.location.lng], 13);
+                    L.marker([data.location.lat, data.location.lng]).addTo(map).bindPopup('Location: ' + data.location.lat + ', ' + data.location.lng).openPopup();
+                }
+            }
+        }
+
+        // Call this function to load data on page load
+        loadDataFromStorage();
+
         // Listen for the 'new_data' event and update the display
         socket.on('new_data', function(data) {
             console.log('Received data:', data);
@@ -105,6 +123,8 @@
             } else {
                 console.log('No valid latitude and longitude in the data.');
             }
+            // Save the data to localStorage
+            localStorage.setItem("ttnData", JSON.stringify(data));
         });
     </script>
 </body>
