@@ -8,9 +8,8 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 google_api_key = "AIzaSyC5TNTnmnxJ7Mkhx48--XOCSg7WX9NndHU"
 
-access_points = []
-
 def json_for_Google_API(wifi_str):
+    access_points = []
     for line in wifi_str.strip().split('\n'): #separate each rows
         parts = line.split('|')
         ssid = mac = rssi = None
