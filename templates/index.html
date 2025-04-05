@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TTN Data</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,6 +33,12 @@
         .data .title {
             font-weight: bold;
         }
+        /* Ensure that the map container has proper sizing */
+        #map {
+            height: 400px; /* Fixed height for the map */
+            width: 50%; /* Full width */
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -43,20 +51,60 @@
             <h3 class="title">Latest Data:</h3>
             <pre id="data-display">Waiting for data...</pre>
         </div>
+
+        <!-- Map container -->
+        <div id="map"></div>
     </div>
 
     <!-- Include Socket.IO -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
+
         // Connect to the Flask-SocketIO server
-        var socket = io.connect('https://' + document.domain + ':' + location.port);
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        console.log('Socket connected to:', 'http://' + document.domain + ':' + location.port);
+
+        // Initialize the map but keep it empty for now
+        var map = L.map('map').setView([55.676098, 12.568337], 11); // Copenhagen
+
+        // Add OpenStreetMap tile layer to the map
+        var tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
 
         // Listen for the 'new_data' event and update the display
         socket.on('new_data', function(data) {
             console.log('Received data:', data);
-            
+
             // Display the data in the <pre> element
             document.getElementById('data-display').textContent = JSON.stringify(data, null, 2);
+
+            // Check if latitude and longitude are available in the received data
+            if (data.location.lat && data.location.lng) {
+                console.log('Valid latitude and longitude:', data.location.lat, data.location.lng);
+
+                var latitude = data.location.lat;
+                var longitude = data.location.lng;
+                var accuracy = data.accuracy;
+
+                // Update the map view to the new coordinates
+                map.setView([latitude, longitude], 13);
+
+                // Add a marker at the new location
+                var circle = L.circle([latitude, longitude], {
+                    color: 'lightblue',
+                    fillColor: '#33d4ff',
+                    fillOpacity: 0.3,
+                    radius: accuracy
+                }).addTo(map);
+                L.marker([latitude, longitude]).addTo(map).bindPopup('Location: ' + latitude + ', ' + longitude).openPopup();
+            } else {
+                console.log('No valid latitude and longitude in the data.');
+            }
         });
     </script>
 </body>
