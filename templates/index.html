@@ -64,7 +64,7 @@
     <script>
 
         // Connect to the Flask-SocketIO server
-        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        var socket = io.connect('https://' + document.domain + ':' + location.port);
         console.log('Socket connected to:', 'http://' + document.domain + ':' + location.port);
 
         // Initialize the map but keep it empty for now
