@@ -1,12 +1,13 @@
 import os
 import json
+import railway
 import requests
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
 socketio = SocketIO(app)
-google_api_key = os.getenv('GOOGLE_API_KEY')
+google_api_key = railway.secrets.get("GOOGLE_API_KEY")
 print(google_api_key)
 
 access_points = []
