@@ -31,7 +31,8 @@ def json_for_Google_API(wifi_str):
 
     #Final payload for Google
     google_payload = {
-        "wifiAccessPoints": access_points
+        "wifiAccessPoints": access_points,
+        "considerIp": False
     }
 
     #debug
