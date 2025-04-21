@@ -79,7 +79,7 @@
         }).addTo(map);
 
         // Function to load data from localStorage if available
-        function loadDataFromStorage() {
+        /*function loadDataFromStorage() {
             var storedData = localStorage.getItem("ttnData");
             if (storedData) {
                 var data = JSON.parse(storedData);
@@ -94,7 +94,7 @@
         }
 
         // Call this function to load data on page load
-        loadDataFromStorage();
+        loadDataFromStorage();*/
 
         // Listen for the 'new_data' event and update the display
         socket.on('new_data', function(data) {
