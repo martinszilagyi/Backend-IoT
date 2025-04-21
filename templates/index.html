@@ -36,7 +36,7 @@
         /* Ensure that the map container has proper sizing */
         #map {
             height: 400px; /* Fixed height for the map */
-            width: 50%; /* Full width */
+            width: 100%; /* Full width */
             margin-top: 20px;
         }
     </style>
@@ -69,6 +69,8 @@
 
         // Initialize the map but keep it empty for now
         var map = L.map('map').setView([55.676098, 12.568337], 11); // Copenhagen
+        let currentMarker = null;
+        let currentCircle = null;
 
         // Add OpenStreetMap tile layer to the map
         var tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -113,13 +115,26 @@
                 map.setView([latitude, longitude], 13);
 
                 // Add a marker at the new location
-                var circle = L.circle([latitude, longitude], {
-                    color: 'red',
-                    fillColor: '#FF0000',
+                // Remove existing ones if they exist
+                if (currentMarker) {
+                    map.removeLayer(currentMarker);
+                }
+                if (currentCircle) {
+                    map.removeLayer(currentCircle);
+                }
+
+                // Now add new ones and store the references
+                currentCircle = L.circle([latitude, longitude], {
+                    color: '#1E90FF',
+                    fillColor: '#87CEFA',
                     fillOpacity: 0.4,
                     radius: accuracy
                 }).addTo(map);
-                L.marker([latitude, longitude]).addTo(map).bindPopup('Location: ' + latitude + ', ' + longitude).openPopup();
+
+                currentMarker = L.marker([latitude, longitude])
+                    .addTo(map)
+                    .bindPopup('Location: ' + latitude + ', ' + longitude)
+                    .openPopup();
             } else {
                 console.log('No valid latitude and longitude in the data.');
             }
