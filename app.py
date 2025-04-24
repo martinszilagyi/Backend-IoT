@@ -7,7 +7,8 @@ from flask_socketio import SocketIO, emit
 app = Flask(__name__)
 socketio = SocketIO(app)
 #Shameless, ugly, hard-coded API key...
-google_api_key = "AIzaSyC5TNTnmnxJ7Mkhx48--XOCSg7WX9NndHU"
+google_api_key = os.getenv("API_KEY")
+#google_api_key = "AIzaSyC5TNTnmnxJ7Mkhx48--XOCSg7WX9NndHU"
 
 #This function decodes incoming data and 'jsonify' it to be compatible with Google Geolocation API.
 def json_for_Google_API(wifi_str):
