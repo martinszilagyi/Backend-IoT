@@ -2,5 +2,5 @@ Flask==2.2.3
 flask-socketio==5.5.1
 werkzeug<3
 gunicorn==23.0.0
-decouple==3.8
+python-decouple==3.8
 requests==2.32.3
