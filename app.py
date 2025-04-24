@@ -1,4 +1,6 @@
 import os
+import sys
+from decouple import config
 import json
 import requests
 from flask import Flask, render_template, request, jsonify
@@ -7,7 +9,8 @@ from flask_socketio import SocketIO, emit
 app = Flask(__name__)
 socketio = SocketIO(app)
 #Shameless, ugly, hard-coded API key...
-google_api_key = os.getenv("API_KEY")
+#google_api_key = os.getenv("API_KEY")
+google_api_key = config("API_KEY")
 #google_api_key = "AIzaSyC5TNTnmnxJ7Mkhx48--XOCSg7WX9NndHU"
 
 #This function decodes incoming data and 'jsonify' it to be compatible with Google Geolocation API.
