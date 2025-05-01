@@ -3,6 +3,7 @@ import sys
 from decouple import config
 import json
 import requests
+import base64
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
 
@@ -60,8 +61,10 @@ def ttn_data():
                 return jsonify({"error": "Missing required fields"}), 400
 
             #Process data
-            wifi_props = ttn_payload['uplink_message']['decoded_payload']['bytes']
+            wifi_props_64 = ttn_payload['uplink_message']['frm_payload'] #base64 encoded data
             #print(f"Received data: {wifi_props}")
+            decoded_bytes = base64.b64decode(wifi_props_64)
+            wifi_props = list(decoded_bytes)
 
             #Create appropriate json structure for using Google geolocation API
             google_payload = json_for_Google_API(wifi_props)
