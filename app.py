@@ -11,20 +11,20 @@ socketio = SocketIO(app)
 google_api_key = os.environ.get("API_KEY")
 
 #This function decodes incoming data and 'jsonify' it to be compatible with Google Geolocation API.
-def json_for_Google_API(wifi_str):
+def json_for_Google_API(wifi_bytes):
+    print(wifi_bytes)
+
+    status = wifi_bytes[0]                                              #status of the device
+    percentage = wifi_bytes[1]                                          #percentage of the device
+
     access_points = []
-    for line in wifi_str.strip().split('\n'):                                   #separate each rows
-        parts = line.split('|')                                                 #separate each cols
-        ssid = mac = rssi = None
-        for part in parts:
-            part = part.strip()
-            if (part.startswith("SSID")):
-                ssid = part.split("SSID:")[1].strip()
-            if (part.startswith("MAC")):
-                mac = part.split("MAC:")[1].strip()
-            if (part.startswith("RSSI")):
-                rssi = part.split("RSSI:")[1].strip()
+
+    for j in range(2, len(wifi_bytes), 7):
+        mac = format((wifi_bytes[j] & 0xF0) >> 4, 'x') + format(wifi_bytes[j] & 0x0F, 'x') + ':' + format((wifi_bytes[j + 1] & 0xF0) >> 4, 'x') + format(wifi_bytes[j + 1] & 0x0F, 'x') + ':' + format((wifi_bytes[j + 2] & 0xF0) >> 4, 'x') + format(wifi_bytes[j + 2] & 0x0F, 'x') + ':' + format((wifi_bytes[j + 3] & 0xF0) >> 4, 'x') + format(wifi_bytes[j + 3] & 0x0F, 'x') + ':' + format((wifi_bytes[j + 4] & 0xF0) >> 4, 'x') + format(wifi_bytes[j + 4] & 0x0F, 'x') + ':' + format((wifi_bytes[j + 5] & 0xF0) >> 4, 'x') + format(wifi_bytes[j + 5] & 0x0F, 'x')
+        rssi = -wifi_bytes[j + 6]
+
         if mac and rssi:
+            print(f"MAC: {mac}, RSSI: {rssi}")
             access_points.append({                                              #temporary access point properites in json format
                 "macAddress": mac,
                 "signalStrength": rssi
@@ -61,11 +61,10 @@ def ttn_data():
 
             #Process data
             wifi_props = ttn_payload['uplink_message']['decoded_payload']['bytes']
-            #Decoding hex to text
-            wifi_str = bytes(wifi_props).decode('utf-8')
+            #print(f"Received data: {wifi_props}")
 
             #Create appropriate json structure for using Google geolocation API
-            google_payload = json_for_Google_API(wifi_str)
+            google_payload = json_for_Google_API(wifi_props)
 
             #Invoke API with the json structure created
             url = f"https://www.googleapis.com/geolocation/v1/geolocate?key={google_api_key}"
