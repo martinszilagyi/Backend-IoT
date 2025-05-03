@@ -40,7 +40,7 @@ def json_for_Google_API(wifi_bytes):
     #debug
     print(json.dumps(google_payload, indent=2))
 
-    return google_payload
+    return status, percentage, google_payload
 
 #Rendering index.html
 @app.route('/')
@@ -67,7 +67,9 @@ def ttn_data():
             wifi_props = list(decoded_bytes)
 
             #Create appropriate json structure for using Google geolocation API
-            google_payload = json_for_Google_API(wifi_props)
+            status, percentage, google_payload = json_for_Google_API(wifi_props)
+
+            socketio.emit('status', [status, percentage])
 
             #Invoke API with the json structure created
             url = f"https://www.googleapis.com/geolocation/v1/geolocate?key={google_api_key}"
