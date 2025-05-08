@@ -6,75 +6,128 @@
     <title>TTN Data</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <style>
+     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: #f0f4f8;
+            color: #333;
         }
+        
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
         }
-        .battery-container {
+        
+        .status-cards {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 20px;
-            gap: 10px;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
         }
-        .data {
-            margin-top: 20px;
+        
+        .card {
+            flex: 1;
+            min-width: 250px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
         }
-        .data pre {
-            background-color: #f0f0f0;
-            padding: 15px;
-            border-radius: 5px;
-            font-size: 14px;
-            word-wrap: break-word;
+        
+        .card:hover {
+            transform: translateY(-4px);
         }
-        .data .title {
+        
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status.online {
+            font-size: 24px;
+            color: green;
             font-weight: bold;
         }
-        .window-row {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
+
+        .status.offline {
+            font-size: 24px;
+            color: rgb(201, 0, 0);
+            font-weight: bold;
         }
-        /* Ensure that the map container has proper sizing */
+        
+        .timestamp {
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        .battery {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-direction: row;
+            margin-top: 1rem;
+        }
+
+        .battery_img {
+            width: 100px;
+            height: auto;
+            margin-top: 1rem;
+            margin: 0;
+        }
+
+        .battery_text {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #000000;
+            margin-right: 18rem;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        .map-section {
+            background: white;
+            padding: 1rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
         #map {
-            height: 400px; /* Fixed height for the map */
-            width: 100%; /* Full width */
-            margin-top: 20px;
+            height: 600px;
+            width: 100%;
+            margin-top: 1rem;
+            border-radius: 12px;
         }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <h1>Data received from google API</h1>
-        <p>This page displays the data received from Google Geolocation API and the last known position of the LoRa device.</p>
+        <div class="status-cards">
 
-        <div class="window-row">
-            <div class="data">
-                <h3 class="title">Last known location:</h3>
-                <pre id="data-display">No data yet...</pre>
+            <div class="card">
+                <h1>Device Status</h1>
+                <p class="status offline">Offline</p>
+                <p class="timestamp" id="date_n_time">Last seen: 2023-10-01 12:00:00</p>
             </div>
-            <!-- New window container -->
-            <div class="data">
-                <h3>Battery percentage</h3>
-                <pre id="perc">Current battery percentage: </pre>
-            </div>
-            <div class="battery-container">
-                <img id="battery-image" src="static/img/battery-p2.png" alt="Battery level" width="60">
+
+            <div class="card">
+                <h1>Battery Status</h1>
+                <div class="battery">
+                    <img class="battery battery_img" id="battery-image" src="static/img/battery-p2.png" alt="Battery level">
+                    <div class="battery battery_text" id="perc">0%</div>
+                </div>
             </div>
         </div>
-        <!-- Map container -->
-        <div id="map"></div>
+        
+        <div class="map-section">
+            <h1>Last known location:</h1>
+            <div id="map"></div>
+        </div>
     </div>
 
     <!-- Include Socket.IO -->
@@ -83,6 +136,12 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
+
+        function updateDateTime() {
+            const now = new Date();
+            const formatted = now.toLocaleString();
+            document.getElementById('date_n_time').textContent = "Last seen: " + formatted;
+        }
 
         // Connect to the Flask-SocketIO server
         var socket = io.connect('https://' + document.domain + ':' + location.port);                                                 //HTTPSSSSSSSSSS if its running on railway, http if locally
@@ -119,9 +178,10 @@
 
         socket.on('status', function(data) {
             console.log('Received status:', data);
-            percentage = data[1]; // Assuming the second element is the battery percentage
+            status = data[0];
+            percentage = data[1];
 
-            document.getElementById('perc').textContent = 'Current battery percentage: ' + percentage + '%';
+            document.getElementById('perc').textContent = percentage + '%';
             const image = document.getElementById("battery-image");
 
             let level;
@@ -146,9 +206,10 @@
         // Listen for the 'new_data' event and update the display
         socket.on('new_data', function(data) {
             console.log('Received data:', data);
+            updateDateTime(); // Update the date and time
 
             // Display the data in the <pre> element
-            document.getElementById('data-display').textContent = JSON.stringify(data, null, 2);
+            //document.getElementById('data-display').textContent = JSON.stringify(data, null, 2);
 
             // Check if latitude and longitude are available in the received data
             if (data.location.lat && data.location.lng) {
