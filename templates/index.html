@@ -136,6 +136,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
+        /* Updates battery status based on battery percentage */
         function updateBatteryStatus(percentage) {
             document.getElementById('perc').textContent = percentage + '%';
             const image = document.getElementById("battery-image");
@@ -159,6 +160,7 @@
             image.src = `static/img/battery-p${level}.png`;
         }
 
+        /* Updates map zoom and pinpoints current location */
         function updateMap(latitude, longitude, accuracy) {
             // Update the map view to the new coordinates
             map.setView([latitude, longitude], 13);
@@ -186,48 +188,58 @@
                 .openPopup();
         }
 
+        /* Updates timestamp of the last activity */
         function updateDateAndTime(date_n_time) {
             document.getElementById('date_n_time').textContent = "Last seen: " + date_n_time;
         }
 
-        // Connect to the Flask-SocketIO server
-        var socket = io.connect('https://' + document.domain + ':' + location.port);                                                 //HTTPSSSSSSSSSS if its running on railway, http if locally
-        console.log('Socket connected to:', 'https://' + document.domain + ':' + location.port);                                     //HTTPSSSSSSSSSS if its running on railway, http if locally
+        /* TODO */
+        function updateStatus(status) {
 
-        // Set the default view to Copenhagen
+        }
+
+        /* Connect to the Flask-SocketIO server */
+        var socket = io.connect('http://' + document.domain + ':' + location.port);                                                 //HTTPSSSSSSSSSS if its running on railway, http if locally
+        console.log('Socket connected to:', 'http://' + document.domain + ':' + location.port);                                     //HTTPSSSSSSSSSS if its running on railway, http if locally
+
+        /* Set the default view to Copenhagen */
         var map = L.map('map').setView([55.676098, 12.568337], 11);
         let currentMarker = null;
         let currentCircle = null;
 
-        // Add OpenStreetMap tile layer to the map
+        /* Add OpenStreetMap tile layer to the map */
         var tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
 
-        // Load last activity if json file is present
+        /* Load last activity if possible (json file exists) */
         {% if data_exists %}
             updateBatteryStatus({{ last_percentage }});
             updateMap({{ last_latitude }}, {{ last_longitude }}, {{ last_accuracy }});
             updateDateAndTime({{ last_timestamp | tojson }});
         {% endif %}
 
-        // Listen for the 'status' event and update the display
+        /* Listen for the 'status' event and update the display for battery percentage and status */
         socket.on('status', function(data) {
             console.log('Received status:', data);
+            /* first element is the status */
             status = data[0];
+            /* second element is the battery percentage */
             percentage = data[1];
+            /* first element is the current time */
             date_n_time = data[2];
 
+            /* Update corresponding elements on the page */
             updateDateAndTime(date_n_time);
             updateBatteryStatus(percentage);
         });
 
-        // Listen for the 'new_data' event and update the display
-        socket.on('new_data', function(data) {
+        /* Listen for the 'location' event and update the display */
+        socket.on('location', function(data) {
             console.log('Received data:', data);
 
-            // Check if latitude and longitude are available in the received data
+            /* Check if latitude and longitude are available in the received data */
             if (data.location.lat && data.location.lng) {
                 console.log('Valid latitude and longitude:', data.location.lat, data.location.lng);
 
@@ -236,6 +248,7 @@
                 console.log('No valid latitude and longitude in the data.');
             }
         });
+    
     </script>
 </body>
 </html>

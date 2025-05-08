@@ -1,6 +1,5 @@
 import os
 import sys
-from decouple import config
 import json
 import requests
 import base64
@@ -13,22 +12,30 @@ socketio = SocketIO(app)
 google_api_key = os.environ.get("API_KEY")
 last_data = {}
 
-#This function decodes incoming data and 'jsonify' it to be compatible with Google Geolocation API.
+#Function decodes incoming data and 'jsonify' it to be compatible with Google Geolocation API.
 def json_for_Google_API(wifi_bytes):
     print(wifi_bytes)
 
-    status = wifi_bytes[0]                                              #status of the device
-    percentage = wifi_bytes[1]                                          #percentage of the device
+    #status of the device
+    status = wifi_bytes[0]
+    #percentage of the device
+    percentage = wifi_bytes[1]
 
+    #empty WiFi nodes 'array'
     access_points = []
 
+    #Scan through all WiFi nodes
     for j in range(2, len(wifi_bytes), 7):
+        #Extract MAC address of WiFi node
         mac = format((wifi_bytes[j] & 0xF0) >> 4, 'x') + format(wifi_bytes[j] & 0x0F, 'x') + ':' + format((wifi_bytes[j + 1] & 0xF0) >> 4, 'x') + format(wifi_bytes[j + 1] & 0x0F, 'x') + ':' + format((wifi_bytes[j + 2] & 0xF0) >> 4, 'x') + format(wifi_bytes[j + 2] & 0x0F, 'x') + ':' + format((wifi_bytes[j + 3] & 0xF0) >> 4, 'x') + format(wifi_bytes[j + 3] & 0x0F, 'x') + ':' + format((wifi_bytes[j + 4] & 0xF0) >> 4, 'x') + format(wifi_bytes[j + 4] & 0x0F, 'x') + ':' + format((wifi_bytes[j + 5] & 0xF0) >> 4, 'x') + format(wifi_bytes[j + 5] & 0x0F, 'x')
+        #Extract signal strength (minus sign not included in the message but always negative)
         rssi = -wifi_bytes[j + 6]
 
+        #If there's valid MAC address and RSSI
         if mac and rssi:
             print(f"MAC: {mac}, RSSI: {rssi}")
-            access_points.append({                                              #temporary access point properites in json format
+            #append found MAC address properties
+            access_points.append({
                 "macAddress": mac,
                 "signalStrength": rssi
             })
@@ -39,14 +46,16 @@ def json_for_Google_API(wifi_bytes):
         "wifiAccessPoints": access_points
     }
 
-    #debug
+    #Debug
     print(json.dumps(google_payload, indent=2))
 
+    #Returns with all extracted data
     return status, percentage, google_payload
 
 #Rendering index.html
 @app.route('/')
 def index():
+    #If there's a json file containing last available data, render the page with last data...
     try:
         with open("last_data.json", "r") as json_file:
             last_data = json.load(json_file)
@@ -60,6 +69,7 @@ def index():
                                    last_accuracy = last_data['location']['accuracy'])
     except FileNotFoundError:
         print("last_data.json not found. No data to display.")
+    #Otherwise render page with default appearance
     return render_template('index.html', data_exists=False,)
 
 #upon triggering ttn-data
@@ -68,26 +78,30 @@ def ttn_data():
     try:
         #Get json payload from the request
         if request.is_json:
-            ttn_payload = request.get_json()  # Parse JSON data
-            #print('Received TTN Data:', ttn_payload)
+            #Parse JSON data
+            ttn_payload = request.get_json()
 
-            #Check if the necessary fields exist in the data (Can be deleted...)
-            if 'uplink_message' not in ttn_payload :
+            #Check if the necessary fields exist in the data
+            if 'uplink_message' not in ttn_payload or 'frm_payload' not in ttn_payload['uplink_message']:
                 return jsonify({"error": "Missing required fields"}), 400
 
-            #Process data
-            wifi_props_64 = ttn_payload['uplink_message']['frm_payload'] #base64 encoded data
-            #print(f"Received data: {wifi_props}")
+            #Process base64 encoded data
+            wifi_props_64 = ttn_payload['uplink_message']['frm_payload']
+            #Decode base64 data
             decoded_bytes = base64.b64decode(wifi_props_64)
+            #Arrange properties into a list
             wifi_props = list(decoded_bytes)
 
             #Create appropriate json structure for using Google geolocation API
             status, percentage, google_payload = json_for_Google_API(wifi_props)
 
+            #Get date and time (Server where the app is deployed is in other timezone)
             now = datetime.now() + timedelta(hours=2)
 
+            #Trigger status script with new data
             socketio.emit('status', [status, percentage, now.strftime("%Y-%m-%d %H:%M:%S")])  # Emit status and percentage to all connected clients
 
+            #Formulate to be stored data
             stored_data = {
                 "status": status,
                 "percentage": percentage,
@@ -102,11 +116,13 @@ def ttn_data():
             #Invoke API with the json structure created
             url = f"https://www.googleapis.com/geolocation/v1/geolocate?key={google_api_key}"
             response = requests.post(url, json=google_payload)
+
+            #If valid data has been received
             if response.status_code == 200:
                 #Process the json response
                 data = response.json()
                 
-                #Extract and print relevant details
+                #Extract and print(debug) relevant details
                 if 'location' in data:
                     location = data['location']
                     latitude = location.get('lat')
@@ -122,19 +138,23 @@ def ttn_data():
                     print(f"Longitude: {longitude}")
                     print(f"Accuracy: {accuracy} meters")
 
-                    # Emit the data to all connected clients using the correct 'socketio.emit' method
-                    socketio.emit('new_data', data)
+                    #Emit the data to all connected clients using the correct 'socketio.emit' method
+                    socketio.emit('location', data)
                 else:
+                    #Location cannot be determined
                     print("Location data not found in the response.")
             else:
+                #debug
                 print(f"Error: {response.status_code} - {response.text}")
 
+            #Save data into a json file that would be loaded in on page refresh
             with open("last_data.json", "w") as json_file:
                 json.dump(stored_data, json_file, indent=4)
 
             #Return a success response
             return jsonify({"message": "Data received successfully", "data": ttn_payload}), 200
         else:
+            #Return error response
             return jsonify({"error": "Invalid data format. Expected JSON."}), 400
 
     except Exception as e:
