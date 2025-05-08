@@ -6,6 +6,7 @@ import requests
 import base64
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
+from datetime import datetime
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -69,7 +70,9 @@ def ttn_data():
             #Create appropriate json structure for using Google geolocation API
             status, percentage, google_payload = json_for_Google_API(wifi_props)
 
-            socketio.emit('status', [status, percentage])
+            now = datetime.now()
+
+            socketio.emit('status', [status, percentage, now.strftime("%Y-%m-%d %H:%M:%S")])  # Emit status and percentage to all connected clients
 
             #Invoke API with the json structure created
             url = f"https://www.googleapis.com/geolocation/v1/geolocate?key={google_api_key}"
