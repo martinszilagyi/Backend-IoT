@@ -136,36 +136,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
-
-        /*function updateDateTime() {
-            const now = new Date();
-            const formatted = now.toLocaleString();
-            document.getElementById('date_n_time').textContent = "Last seen: " + formatted;
-        }*/
-
-        // Connect to the Flask-SocketIO server
-        var socket = io.connect('https://' + document.domain + ':' + location.port);                                                 //HTTPSSSSSSSSSS if its running on railway, http if locally
-        console.log('Socket connected to:', 'https://' + document.domain + ':' + location.port);                                     //HTTPSSSSSSSSSS if its running on railway, http if locally
-
-        // Initialize the map but keep it empty for now
-        var map = L.map('map').setView([55.676098, 12.568337], 11); // Copenhagen
-        let currentMarker = null;
-        let currentCircle = null;
-
-        // Add OpenStreetMap tile layer to the map
-        var tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(map);
-
-        socket.on('status', function(data) {
-            console.log('Received status:', data);
-            //updateDateTime();
-            status = data[0];
-            percentage = data[1];
-            date_n_time = data[2];
-
-            document.getElementById('date_n_time').textContent = "Last seen: " + date_n_time;
+        function updateBatteryStatus(percentage) {
             document.getElementById('perc').textContent = percentage + '%';
             const image = document.getElementById("battery-image");
 
@@ -186,53 +157,84 @@
 
             // Update image source dynamically
             image.src = `static/img/battery-p${level}.png`;
+        }
+
+        function updateMap(latitude, longitude, accuracy) {
+            // Update the map view to the new coordinates
+            map.setView([latitude, longitude], 13);
+
+            // Add a marker at the new location
+            // Remove existing ones if they exist
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+            if (currentCircle) {
+                map.removeLayer(currentCircle);
+            }
+
+            // Now add new ones and store the references
+            currentCircle = L.circle([latitude, longitude], {
+                color: '#1E90FF',
+                fillColor: '#87CEFA',
+                fillOpacity: 0.4,
+                radius: accuracy
+            }).addTo(map);
+
+            currentMarker = L.marker([latitude, longitude])
+                .addTo(map)
+                .bindPopup('Location: ' + latitude + ', ' + longitude)
+                .openPopup();
+        }
+
+        function updateDateAndTime(date_n_time) {
+            document.getElementById('date_n_time').textContent = "Last seen: " + date_n_time;
+        }
+
+        // Connect to the Flask-SocketIO server
+        var socket = io.connect('https://' + document.domain + ':' + location.port);                                                 //HTTPSSSSSSSSSS if its running on railway, http if locally
+        console.log('Socket connected to:', 'https://' + document.domain + ':' + location.port);                                     //HTTPSSSSSSSSSS if its running on railway, http if locally
+
+        // Set the default view to Copenhagen
+        var map = L.map('map').setView([55.676098, 12.568337], 11);
+        let currentMarker = null;
+        let currentCircle = null;
+
+        // Add OpenStreetMap tile layer to the map
+        var tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        // Load last activity if json file is present
+        {% if data_exists %}
+            updateBatteryStatus({{ last_percentage }});
+            updateMap({{ last_latitude }}, {{ last_longitude }}, {{ last_accuracy }});
+            updateDateAndTime({{ last_timestamp | tojson }});
+        {% endif %}
+
+        // Listen for the 'status' event and update the display
+        socket.on('status', function(data) {
+            console.log('Received status:', data);
+            status = data[0];
+            percentage = data[1];
+            date_n_time = data[2];
+
+            updateDateAndTime(date_n_time);
+            updateBatteryStatus(percentage);
         });
 
         // Listen for the 'new_data' event and update the display
         socket.on('new_data', function(data) {
             console.log('Received data:', data);
-            //updateDateTime(); // Update the date and time
-
-            // Display the data in the <pre> element
-            //document.getElementById('data-display').textContent = JSON.stringify(data, null, 2);
 
             // Check if latitude and longitude are available in the received data
             if (data.location.lat && data.location.lng) {
                 console.log('Valid latitude and longitude:', data.location.lat, data.location.lng);
 
-                var latitude = data.location.lat;
-                var longitude = data.location.lng;
-                var accuracy = data.accuracy;
-
-                // Update the map view to the new coordinates
-                map.setView([latitude, longitude], 13);
-
-                // Add a marker at the new location
-                // Remove existing ones if they exist
-                if (currentMarker) {
-                    map.removeLayer(currentMarker);
-                }
-                if (currentCircle) {
-                    map.removeLayer(currentCircle);
-                }
-
-                // Now add new ones and store the references
-                currentCircle = L.circle([latitude, longitude], {
-                    color: '#1E90FF',
-                    fillColor: '#87CEFA',
-                    fillOpacity: 0.4,
-                    radius: accuracy
-                }).addTo(map);
-
-                currentMarker = L.marker([latitude, longitude])
-                    .addTo(map)
-                    .bindPopup('Location: ' + latitude + ', ' + longitude)
-                    .openPopup();
+                updateMap(data.location.lat, data.location.lng, data.accuracy);
             } else {
                 console.log('No valid latitude and longitude in the data.');
             }
-
-
         });
     </script>
 </body>

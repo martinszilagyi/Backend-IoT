@@ -11,6 +11,7 @@ from datetime import datetime
 app = Flask(__name__)
 socketio = SocketIO(app)
 google_api_key = os.environ.get("API_KEY")
+last_data = {}
 
 #This function decodes incoming data and 'jsonify' it to be compatible with Google Geolocation API.
 def json_for_Google_API(wifi_bytes):
@@ -46,7 +47,20 @@ def json_for_Google_API(wifi_bytes):
 #Rendering index.html
 @app.route('/')
 def index():
-    return render_template('index.html')
+    try:
+        with open("last_data.json", "r") as json_file:
+            last_data = json.load(json_file)
+            return render_template('index.html',
+                                   data_exists=True,
+                                   last_status = last_data['status'],
+                                   last_percentage = last_data['percentage'],
+                                   last_timestamp = last_data['timestamp'],
+                                   last_latitude = last_data['location']['latitude'],
+                                   last_longitude = last_data['location']['longitude'],
+                                   last_accuracy = last_data['location']['accuracy'])
+    except FileNotFoundError:
+        print("last_data.json not found. No data to display.")
+    return render_template('index.html', data_exists=False,)
 
 #upon triggering ttn-data
 @app.route('/ttn-data', methods=['POST'])
@@ -74,6 +88,17 @@ def ttn_data():
 
             socketio.emit('status', [status, percentage, now.strftime("%Y-%m-%d %H:%M:%S")])  # Emit status and percentage to all connected clients
 
+            stored_data = {
+                "status": status,
+                "percentage": percentage,
+                "location": {
+                    "latitude": 52.0000,
+                    "longitude": 12.568337,
+                    "accuracy": 20,
+                },
+                "timestamp": now.strftime("%Y-%m-%d %H:%M:%S")
+            }
+
             #Invoke API with the json structure created
             url = f"https://www.googleapis.com/geolocation/v1/geolocate?key={google_api_key}"
             response = requests.post(url, json=google_payload)
@@ -88,6 +113,10 @@ def ttn_data():
                     longitude = location.get('lng')
                     accuracy = data.get('accuracy')
 
+                    stored_data['location']['latitude'] = latitude
+                    stored_data['location']['longitude'] = longitude
+                    stored_data['location']['accuracy'] = accuracy
+
                     #Debug
                     print(f"Latitude: {latitude}")
                     print(f"Longitude: {longitude}")
@@ -99,6 +128,11 @@ def ttn_data():
                     print("Location data not found in the response.")
             else:
                 print(f"Error: {response.status_code} - {response.text}")
+
+            with open("last_data.json", "w") as json_file:
+                json.dump(stored_data, json_file, indent=4)
+
+            print(stored_data)
 
             #Return a success response
             return jsonify({"message": "Data received successfully", "data": ttn_payload}), 200
