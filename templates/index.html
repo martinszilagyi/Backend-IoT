@@ -194,7 +194,7 @@
         }
 
         function updateStatus(status) {
-            if(status != "Offline"){
+            if(status != "Offline" && status != "Status Unknown"){
                 document.getElementById('status').className = 'status online' ;
             }
             else{
