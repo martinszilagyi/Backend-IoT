@@ -302,6 +302,7 @@
         /* Load last activity if possible (json file exists) */
         {% if data_exists %}
             updateBatteryStatus({{ last_percentage }});
+            updateStatus({{  last_status  }});
             updateMap({{ last_latitude }}, {{ last_longitude }}, {{ last_accuracy }});
             updateDateAndTime({{ last_timestamp | tojson }});
         {% endif %}
