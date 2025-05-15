@@ -261,7 +261,7 @@
 
         /* Set the operation mode if it differs from current mode */
         function set_opMode(mode) {
-            if (requestedOpMode !== mode) {
+            if (currentOpMode !== mode) {
                 console.log("Setting mode to:", mode);
 
                 /* trigger a POST */

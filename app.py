@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 socketio = SocketIO(app)
 google_api_key = os.environ.get("API_KEY")
+ttn_api_key = os.environ.get("TTN_API_KEY")
 last_data = {}
 
 #Function decodes incoming data and 'jsonify' it to be compatible with Google Geolocation API.
@@ -63,6 +64,32 @@ def json_for_Google_API(wifi_bytes):
 
     #Returns with all extracted data
     return status_str, percentage, google_payload
+
+def send_downlink(app_id, device_id, payload_bytes, f_port=1):
+    url = f"https://eu1.cloud.thethings.network/api/v3/as/applications/{app_id}/devices/{device_id}/down/push"
+    
+    print(google_api_key)
+    print(ttn_api_key)
+    auth_key = "Bearer " + ttn_api_key
+    headers = {
+        "Authorization": auth_key,
+        "Content-Type": "application/json"
+    }
+    
+    frm_payload = base64.b64encode(bytes(payload_bytes)).decode()
+    
+    body = {
+        "downlinks": [
+            {
+                "frm_payload": frm_payload,
+                "f_port": f_port,
+                "priority": "NORMAL"
+            }
+        ]
+    }
+
+    response = requests.post(url, headers=headers, json=body)
+    print(response.status_code, response.text)
 
 #Rendering index.html
 @app.route('/')
@@ -182,9 +209,7 @@ def set_opMode():
     
     #CALL TTN API TO SEND DOWNLINK MSG
 
-
-
-
+    send_downlink("geolocation123", "esp-32-geoloc-otaa", [1, 3, 2, 1])
 
     return jsonify({'mode': mode}), 200
 
