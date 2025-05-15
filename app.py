@@ -19,6 +19,8 @@ def json_for_Google_API(wifi_bytes):
     #status of the device
     status = wifi_bytes[0]
 
+    status_str = "Status Unknown"
+    
     if status == 0:
         status_str = "Sleep Mode"
     elif status == 1:
