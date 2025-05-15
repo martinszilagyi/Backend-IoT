@@ -13,15 +13,9 @@ google_api_key = os.environ.get("API_KEY")
 ttn_api_key = os.environ.get("TTN_API_KEY")
 last_data = {}
 
-#Function decodes incoming data and 'jsonify' it to be compatible with Google Geolocation API.
-def json_for_Google_API(wifi_bytes):
-    print(wifi_bytes)
-
-    #status of the device
-    status = wifi_bytes[0]
-
+#Converts status mode numerical value to string
+def status_to_str(status):
     status_str = "Status Unknown"
-
     if status == 0:
         status_str = "Active Mode"
     elif status == 1:
@@ -30,6 +24,29 @@ def json_for_Google_API(wifi_bytes):
         status_str == "Storage Mode"
     elif status == 3:
         status_str == "ALARM ACTIVATED"
+    return status_str
+    
+#Converts status string to status mode numerical value
+def str_to_status(status_str):
+    status = -1
+    if status_str == "Active Mode":
+        status = 0
+    elif status_str == "Park Mode":
+        status = 1
+    elif status_str == "Storage Mode":
+        status = 2
+    elif status_str == "ALARM ACTIVATED":
+        status = 3
+    return status
+
+#Function decodes incoming data and 'jsonify' it to be compatible with Google Geolocation API.
+def json_for_Google_API(wifi_bytes):
+    print(wifi_bytes)
+
+    #status of the device
+    status = wifi_bytes[0]
+
+    status_str = status_to_str(status)
 
     #percentage of the device
     percentage = wifi_bytes[1]
@@ -67,9 +84,7 @@ def json_for_Google_API(wifi_bytes):
 
 def send_downlink(app_id, device_id, payload_bytes, f_port=1):
     url = f"https://eu1.cloud.thethings.network/api/v3/as/applications/{app_id}/devices/{device_id}/down/push"
-    
-    print(google_api_key)
-    print(ttn_api_key)
+
     auth_key = "Bearer " + ttn_api_key
     headers = {
         "Authorization": auth_key,
@@ -206,10 +221,8 @@ def set_opMode():
     data = request.get_json()
     mode = data.get('mode')
     print(f"Set opmode to: {mode}")
-    
-    #CALL TTN API TO SEND DOWNLINK MSG
 
-    send_downlink("geolocation123", "esp-32-geoloc-otaa", [1, 3, 2, 1])
+    send_downlink("geolocation123", "esp-32-geoloc-otaa", [str_to_status(mode)])
 
     return jsonify({'mode': mode}), 200
 
