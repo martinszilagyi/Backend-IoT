@@ -20,13 +20,13 @@ def json_for_Google_API(wifi_bytes):
     status = wifi_bytes[0]
 
     status_str = "Status Unknown"
-    
+
     if status == 0:
-        status_str = "Sleep Mode"
+        status_str = "Active Mode"
     elif status == 1:
-        status_str == "Parked"
+        status_str == "Park Mode"
     elif status == 2:
-        status_str == "Moving"
+        status_str == "Storage Mode"
     elif status == 3:
         status_str == "ALARM ACTIVATED"
 
@@ -173,6 +173,20 @@ def ttn_data():
         #Log the error
         print(f"Error processing data: {e}")
         return jsonify({"error": f"Failed to process data: {str(e)}"}), 500
+
+@app.route('/set_opMode', methods=['POST'])
+def set_opMode():
+    data = request.get_json()
+    mode = data.get('mode')
+    print(f"Set opmode to: {mode}")
+    
+    #CALL TTN API TO SEND DOWNLINK MSG
+
+
+
+
+
+    return jsonify({'mode': mode}), 200
 
 #Start the application
 if __name__ == '__main__':

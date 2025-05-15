@@ -45,6 +45,42 @@
             font-size: 1.25rem;
             margin-bottom: 0.5rem;
         }
+
+        .full-width {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 1.8rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .button-group button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #33C481;
+            color: white;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+
+        .button-group button:hover {
+            background-color: rgb(0, 151, 13);
+        }
+
+        .info-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f0f0; /* light grey */
+            border-left: 5px solid #28c76f;
+            border-radius: 5px;
+            font-size: 14px;
+        }
         
         .status.online {
             font-size: 24px;
@@ -123,6 +159,16 @@
                 </div>
             </div>
         </div>
+
+        <div class="card full-width">
+            <h1>Set Operation Mode</h1>
+            <div class="button-group">
+                <button onclick="set_opMode('Active Mode')">Active Mode</button>
+                <button onclick="set_opMode('Park Mode')">Park Mode</button>
+                <button onclick="set_opMode('Storage Mode')">Storage Mode</button>
+            </div>
+            <div id="mode-info-box" class="info-box" style="display: none;"></div>
+        </div>
         
         <div class="map-section">
             <h1>Last known location:</h1>
@@ -193,14 +239,47 @@
             document.getElementById('date_n_time').textContent = "Last seen: " + date_n_time;
         }
 
+        /* Updates operation mode of the last activity */
         function updateStatus(status) {
-            if(status != "Offline" && status != "Status Unknown"){
+            if(status != "Offline" && status != "Status Unknown" && status != "ALARM ACTIVATED") {
                 document.getElementById('status').className = 'status online' ;
             }
-            else{
+            else {
                 document.getElementById('status').className = 'status offline' ;
             }
+
             document.getElementById('status').textContent = status;
+
+
+            console.log("requested opmode: " + requestedOpMode)
+            console.log("current opmode: " + status)
+            if (requestedOpMode == status) {
+                document.getElementById('mode-info-box').style.display = 'none';
+            }
+            currentOpMode = status;
+        }
+
+        /* Set the operation mode if it differs from current mode */
+        function set_opMode(mode) {
+            if (requestedOpMode !== mode) {
+                console.log("Setting mode to:", mode);
+
+                /* trigger a POST */
+                fetch('/set_opMode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ mode: mode })
+                })
+                /* Show textbox with corrresponding message */
+                const infoBox = document.getElementById('mode-info-box');
+                infoBox.style.display = 'block';
+                infoBox.textContent = "Trying to set operation mode to: " + mode + "...";
+
+                /* update requested opmode */
+                requestedOpMode = mode;
+            }
         }
 
         /* Connect to the Flask-SocketIO server */
@@ -211,6 +290,8 @@
         var map = L.map('map').setView([55.676098, 12.568337], 11);
         let currentMarker = null;
         let currentCircle = null;
+        let requestedOpMode = "";
+        let currentOpMode = "";
 
         /* Add OpenStreetMap tile layer to the map */
         var tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
