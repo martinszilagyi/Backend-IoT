@@ -18,6 +18,16 @@ def json_for_Google_API(wifi_bytes):
 
     #status of the device
     status = wifi_bytes[0]
+
+    if status == 0:
+        status_str = "Sleep Mode"
+    elif status == 1:
+        status_str == "Parked"
+    elif status == 2:
+        status_str == "Moving"
+    elif status == 3:
+        status_str == "ALARM ACTIVATED"
+
     #percentage of the device
     percentage = wifi_bytes[1]
 
@@ -50,7 +60,7 @@ def json_for_Google_API(wifi_bytes):
     print(json.dumps(google_payload, indent=2))
 
     #Returns with all extracted data
-    return status, percentage, google_payload
+    return status_str, percentage, google_payload
 
 #Rendering index.html
 @app.route('/')
@@ -93,17 +103,17 @@ def ttn_data():
             wifi_props = list(decoded_bytes)
 
             #Create appropriate json structure for using Google geolocation API
-            status, percentage, google_payload = json_for_Google_API(wifi_props)
+            status_str, percentage, google_payload = json_for_Google_API(wifi_props)
 
             #Get date and time (Server where the app is deployed is in other timezone)
             now = datetime.now() + timedelta(hours=2)
 
             #Trigger status script with new data
-            socketio.emit('status', [status, percentage, now.strftime("%Y-%m-%d %H:%M:%S")])  # Emit status and percentage to all connected clients
+            socketio.emit('status', [status_str, percentage, now.strftime("%Y-%m-%d %H:%M:%S")])  # Emit status and percentage to all connected clients
 
             #Formulate to be stored data
             stored_data = {
-                "status": status,
+                "status": status_str,
                 "percentage": percentage,
                 "location": {
                     "latitude": 0,

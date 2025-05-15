@@ -111,7 +111,7 @@
 
             <div class="card">
                 <h1>Device Status</h1>
-                <p class="status offline">Offline</p>
+                <p id="status" class="status offline">Offline</p>
                 <p class="timestamp" id="date_n_time">Last seen: 2023-10-01 12:00:00</p>
             </div>
 
@@ -193,9 +193,14 @@
             document.getElementById('date_n_time').textContent = "Last seen: " + date_n_time;
         }
 
-        /* TODO */
         function updateStatus(status) {
-
+            if(status != "Offline"){
+                document.getElementById('status').className = 'status online' ;
+            }
+            else{
+                document.getElementById('status').className = 'status offline' ;
+            }
+            document.getElementById('status').textContent = status;
         }
 
         /* Connect to the Flask-SocketIO server */
