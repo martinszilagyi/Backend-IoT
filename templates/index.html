@@ -204,8 +204,8 @@
         }
 
         /* Connect to the Flask-SocketIO server */
-        var socket = io.connect('http://' + document.domain + ':' + location.port);                                                 //HTTPSSSSSSSSSS if its running on railway, http if locally
-        console.log('Socket connected to:', 'http://' + document.domain + ':' + location.port);                                     //HTTPSSSSSSSSSS if its running on railway, http if locally
+        var socket = io.connect('https://' + document.domain + ':' + location.port);                                                 //HTTPSSSSSSSSSS if its running on railway, http if locally
+        console.log('Socket connected to:', 'https://' + document.domain + ':' + location.port);                                     //HTTPSSSSSSSSSS if its running on railway, http if locally
 
         /* Set the default view to Copenhagen */
         var map = L.map('map').setView([55.676098, 12.568337], 11);
@@ -238,6 +238,7 @@
             /* Update corresponding elements on the page */
             updateDateAndTime(date_n_time);
             updateBatteryStatus(percentage);
+            updateStatus(status);
         });
 
         /* Listen for the 'location' event and update the display */
