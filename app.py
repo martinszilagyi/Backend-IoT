@@ -83,7 +83,7 @@ def json_for_Google_API(wifi_bytes):
     return status_str, percentage, google_payload
 
 def send_downlink(app_id, device_id, payload_bytes, f_port=6):
-    url = f"https://eu1.cloud.thethings.network/api/v3/as/applications/{app_id}/devices/{device_id}/down/push"
+    url = f"https://tegnologylora.eu1.cloud.thethings.industries/api/v3/as/applications/{app_id}/devices/{device_id}/down/push"
 
     auth_key = "Bearer " + ttn_api_key
     headers = {
