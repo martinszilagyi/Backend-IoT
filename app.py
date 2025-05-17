@@ -222,7 +222,7 @@ def set_opMode():
     mode = data.get('mode')
     print(f"Set opmode to: {mode}")
 
-    send_downlink("geolocation123", "esp-32-geoloc-otaa", [str_to_status(mode)])
+    send_downlink("test-application", "heltec-board", [str_to_status(mode)])
 
     return jsonify({'mode': mode}), 200
 
