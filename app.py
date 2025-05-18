@@ -167,39 +167,40 @@ def ttn_data():
                 "timestamp": now.strftime("%Y-%m-%d %H:%M:%S")
             }
 
-            #Invoke API with the json structure created
-            url = f"https://www.googleapis.com/geolocation/v1/geolocate?key={google_api_key}"
-            response = requests.post(url, json=google_payload)
+            if google_payload["wifiAccessPoints"]:
+                #Invoke API with the json structure created
+                url = f"https://www.googleapis.com/geolocation/v1/geolocate?key={google_api_key}"
+                response = requests.post(url, json=google_payload)
 
-            #If valid data has been received
-            if response.status_code == 200:
-                #Process the json response
-                data = response.json()
-                
-                #Extract and print(debug) relevant details
-                if 'location' in data:
-                    location = data['location']
-                    latitude = location.get('lat')
-                    longitude = location.get('lng')
-                    accuracy = data.get('accuracy')
+                #If valid data has been received
+                if response.status_code == 200:
+                    #Process the json response
+                    data = response.json()
+                    
+                    #Extract and print(debug) relevant details
+                    if 'location' in data:
+                        location = data['location']
+                        latitude = location.get('lat')
+                        longitude = location.get('lng')
+                        accuracy = data.get('accuracy')
 
-                    stored_data['location']['latitude'] = latitude
-                    stored_data['location']['longitude'] = longitude
-                    stored_data['location']['accuracy'] = accuracy
+                        stored_data['location']['latitude'] = latitude
+                        stored_data['location']['longitude'] = longitude
+                        stored_data['location']['accuracy'] = accuracy
 
-                    #Debug
-                    print(f"Latitude: {latitude}")
-                    print(f"Longitude: {longitude}")
-                    print(f"Accuracy: {accuracy} meters")
+                        #Debug
+                        print(f"Latitude: {latitude}")
+                        print(f"Longitude: {longitude}")
+                        print(f"Accuracy: {accuracy} meters")
 
-                    #Emit the data to all connected clients using the correct 'socketio.emit' method
-                    socketio.emit('location', data)
+                        #Emit the data to all connected clients using the correct 'socketio.emit' method
+                        socketio.emit('location', data)
+                    else:
+                        #Location cannot be determined
+                        print("Location data not found in the response.")
                 else:
-                    #Location cannot be determined
-                    print("Location data not found in the response.")
-            else:
-                #debug
-                print(f"Error: {response.status_code} - {response.text}")
+                    #debug
+                    print(f"Error: {response.status_code} - {response.text}")
 
             #Save data into a json file that would be loaded in on page refresh
             with open("last_data.json", "w") as json_file:
