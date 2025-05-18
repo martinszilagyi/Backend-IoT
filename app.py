@@ -17,11 +17,11 @@ last_data = {}
 def status_to_str(status):
     status_str = "Status Unknown"
     if status == 0:
-        status_str = "Active Mode"
+        status_str = "Storage Mode"
     elif status == 1:
         status_str == "Park Mode"
     elif status == 2:
-        status_str == "Storage Mode"
+        status_str == "Active Mode"
     elif status == 3:
         status_str == "ALARM ACTIVATED"
     return status_str
@@ -29,11 +29,11 @@ def status_to_str(status):
 #Converts status string to status mode numerical value
 def str_to_status(status_str):
     status = -1
-    if status_str == "Active Mode":
+    if status_str == "Storage Mode":
         status = 0
     elif status_str == "Park Mode":
         status = 1
-    elif status_str == "Storage Mode":
+    elif status_str == "Active Mode":
         status = 2
     elif status_str == "ALARM ACTIVATED":
         status = 3
