@@ -144,7 +144,7 @@ def ttn_data():
             #Decode base64 data
             decoded_bytes = base64.b64decode(wifi_props_64)
             #Arrange properties into a list
-            wifi_props = int(list(decoded_bytes))
+            wifi_props = list(decoded_bytes)
 
             #Create appropriate json structure for using Google geolocation API
             status_str, percentage, google_payload = json_for_Google_API(wifi_props)
