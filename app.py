@@ -19,11 +19,11 @@ def status_to_str(status):
     if status == 0:
         status_str = "Storage Mode"
     elif status == 1:
-        status_str == "Park Mode"
+        status_str = "Park Mode"
     elif status == 2:
-        status_str == "Active Mode"
+        status_str = "Active Mode"
     elif status == 3:
-        status_str == "ALARM ACTIVATED"
+        status_str = "ALARM ACTIVATED"
     return status_str
     
 #Converts status string to status mode numerical value
