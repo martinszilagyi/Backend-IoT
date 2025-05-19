@@ -286,11 +286,8 @@
         console.log('Socket connected to:', 'https://' + document.domain + ':' + location.port);                                     //HTTPSSSSSSSSSS if its running on railway, http if locally
 
         /* Set the default view to Copenhagen */
-        var map = L.map('map').setView([55.783301, 12.521864], 13);
-        let currentMarker = L.marker([55.783301, 12.521864])
-                .addTo(map)
-                .bindPopup('Location: ' + 55.783301 + ', ' + 12.521864)
-                .openPopup();
+        var map = L.map('map').setView([55.681349, 12.570573], 11);
+        let currentMarker = null;
         let currentCircle = null;
         let requestedOpMode = "";
         let currentOpMode = "";
