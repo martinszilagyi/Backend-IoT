@@ -48,6 +48,8 @@ def json_for_Google_API(wifi_bytes):
 
     status_str = status_to_str(status)
 
+    print(status_str)
+
     #percentage of the device
     percentage = wifi_bytes[1]
 
