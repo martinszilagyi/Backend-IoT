@@ -46,7 +46,7 @@ def json_for_Google_API(wifi_bytes):
     #status of the device
     status = wifi_bytes[0]
 
-    print(status)
+    print(int(status))
 
     status_str = status_to_str(int(status))
 
